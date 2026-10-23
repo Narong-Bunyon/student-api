@@ -107,6 +107,38 @@
             </div>
         </div>
 
+        <!-- Overdue Alert Banner for Late Books -->
+        @php
+            $overdueCount = $borrowings->filter(function($b) {
+                $due = $b->due_at ? \Carbon\Carbon::parse($b->due_at) : ($b->borrowed_at ? \Carbon\Carbon::parse($b->borrowed_at)->addDays(14) : null);
+                return !$b->returned_at && $due && $due->isPast();
+            })->count();
+        @endphp
+
+        @if($overdueCount > 0)
+            <div class="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-rose-500/10 via-red-500/10 to-rose-500/15 border-2 border-rose-500/40 shadow-sm flex items-start gap-4">
+                <div class="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30">
+                    <svg class="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-sm">
+                            🚩 RED FLAG WARNING
+                        </span>
+                        <span class="text-xs font-bold text-rose-700">Urgent Return Required</span>
+                    </div>
+                    <h3 class="text-base font-extrabold text-rose-900 mt-1">
+                        You have {{ $overdueCount }} {{ Str::plural('book', $overdueCount) }} past due date!
+                    </h3>
+                    <p class="text-xs text-rose-700/90 mt-0.5">
+                        Please return late books to the school library immediately to avoid penalties or account suspension.
+                    </p>
+                </div>
+            </div>
+        @endif
+
         @if($borrowings->count() > 0)
             <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
@@ -123,15 +155,20 @@
                         <tbody class="divide-y divide-slate-100 text-sm">
                             @foreach($borrowings as $borrowing)
                                 @php
-                                    $borrowedDate = $borrowing->created_at;
-                                    $dueDate = $borrowedDate ? $borrowedDate->copy()->addDays(14) : null;
+                                    $borrowedDate = $borrowing->borrowed_at ?? $borrowing->created_at;
+                                    $dueDate = $borrowing->due_at 
+                                        ? \Carbon\Carbon::parse($borrowing->due_at) 
+                                        : ($borrowedDate ? \Carbon\Carbon::parse($borrowedDate)->copy()->addDays(14) : null);
                                     $isOverdue = !$borrowing->returned_at && $dueDate && $dueDate->isPast();
                                 @endphp
-                                <tr class="hover:bg-slate-50/70 transition-colors">
+                                <tr class="transition-colors {{ $isOverdue ? 'bg-rose-50/40 hover:bg-rose-50/70 border-l-4 border-l-rose-500' : 'hover:bg-slate-50/70' }}">
                                     <!-- Book Info -->
                                     <td class="px-6 py-4">
-                                        <div class="font-bold text-slate-900">
-                                            {{ $borrowing->book->title ?? 'Book #' . $borrowing->book_id }}
+                                        <div class="font-bold {{ $isOverdue ? 'text-rose-950 flex items-center gap-2' : 'text-slate-900' }}">
+                                            @if($isOverdue)
+                                                <span class="text-sm" title="Overdue Warning">🚩</span>
+                                            @endif
+                                            <span>{{ $borrowing->book->title ?? 'Book #' . $borrowing->book_id }}</span>
                                         </div>
                                         <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
                                             <span>By {{ $borrowing->book->author ?? 'Unknown' }}</span>
@@ -151,7 +188,7 @@
 
                                     <!-- Borrow Date -->
                                     <td class="px-6 py-4 text-slate-700 font-mono text-xs">
-                                        {{ $borrowing->created_at ? $borrowing->created_at->format('M d, Y') : '—' }}
+                                        {{ $borrowedDate ? \Carbon\Carbon::parse($borrowedDate)->format('M d, Y') : '—' }}
                                     </td>
 
                                     <!-- Return / Due Date -->
@@ -160,11 +197,19 @@
                                             <span class="text-emerald-700 font-medium">
                                                 {{ \Carbon\Carbon::parse($borrowing->returned_at)->format('M d, Y') }}
                                             </span>
+                                            <span class="block text-[10px] text-emerald-600 font-sans mt-0.5">Returned</span>
                                         @elseif($dueDate)
-                                            <div class="{{ $isOverdue ? 'text-rose-600 font-bold' : 'text-slate-700' }}">
-                                                {{ $dueDate->format('M d, Y') }}
+                                            <div class="{{ $isOverdue ? 'text-rose-700 font-bold' : 'text-slate-700' }}">
+                                                <span class="inline-flex items-center gap-1">
+                                                    @if($isOverdue)
+                                                        <svg class="w-3.5 h-3.5 text-rose-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                                                    @endif
+                                                    {{ $dueDate->format('M d, Y') }}
+                                                </span>
                                                 @if($isOverdue)
-                                                    <span class="block text-[10px] text-rose-500 font-sans font-bold uppercase mt-0.5">Overdue</span>
+                                                    <span class="block text-[10px] text-rose-600 font-sans font-extrabold uppercase mt-0.5 tracking-wider">
+                                                        ⚠️ {{ $dueDate->diffForHumans() }} (LATE)
+                                                    </span>
                                                 @else
                                                     <span class="block text-[10px] text-slate-400 font-sans mt-0.5">({{ $dueDate->diffForHumans() }})</span>
                                                 @endif
@@ -182,9 +227,9 @@
                                                 Returned
                                             </span>
                                         @elseif($isOverdue)
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-                                                Overdue Loan
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-red-100 text-red-800 border-2 border-red-300 shadow-sm animate-pulse">
+                                                <span>🚩</span>
+                                                <span>OVERDUE LATE</span>
                                             </span>
                                         @else
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">

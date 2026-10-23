@@ -18,7 +18,7 @@ class BookController extends Controller
                   ->orWhere('author', 'like', '%' . $request->search . '%');
         }
 
-        $books = $query->paginate(10);
+        $books = $query->latest()->paginate(5)->withQueryString();
         return view('admin.books.index', compact('books'));
     }
 

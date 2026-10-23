@@ -40,11 +40,26 @@
                     @error('book_id') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Status *</label>
+                    <select name="status" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition bg-white">
+                        <option value="pending" {{ old('status', $borrowing->status) == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="approved" {{ old('status', $borrowing->status) == 'approved' ? 'selected' : '' }}>Approved</option>
+                        <option value="cancel" {{ old('status', $borrowing->status) == 'cancel' ? 'selected' : '' }}>Cancel</option>
+                    </select>
+                    @error('status') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Borrowed Date *</label>
                         <input type="date" name="borrowed_at" value="{{ old('borrowed_at', $borrowing->borrowed_at ? \Carbon\Carbon::parse($borrowing->borrowed_at)->format('Y-m-d') : '') }}" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition" />
                         @error('borrowed_at') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Due Date (Optional)</label>
+                        <input type="date" name="due_at" value="{{ old('due_at', $borrowing->due_at ? \Carbon\Carbon::parse($borrowing->due_at)->format('Y-m-d') : '') }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition" />
+                        @error('due_at') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Returned Date (Mark Returned)</label>

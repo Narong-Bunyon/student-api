@@ -58,11 +58,16 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        // Students / regular users are not permitted to delete their accounts
+        if ($user->role !== 'admin') {
+            abort(403, 'Students and regular members are not permitted to delete their library accounts. Please contact the campus library administrator.');
+        }
+
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);
-
-        $user = $request->user();
 
         Auth::logout();
 

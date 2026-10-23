@@ -9,11 +9,12 @@ class Borrowing extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'book_id', 'borrowed_at', 'returned_at'];
+    protected $fillable = ['user_id', 'book_id', 'borrowed_at', 'returned_at', 'due_at', 'status'];
 
     protected $casts = [
         'borrowed_at' => 'date',
         'returned_at' => 'date',
+        'due_at' => 'date',
     ];
 
     public function user()

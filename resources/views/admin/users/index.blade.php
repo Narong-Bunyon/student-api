@@ -56,6 +56,7 @@
                         <th class="py-3.5 px-4">Member Info</th>
                         <th class="py-3.5 px-4">Email</th>
                         <th class="py-3.5 px-4 text-center">Role</th>
+                        <th class="py-3.5 px-4 text-center">Status</th>
                         <th class="py-3.5 px-4 text-center">Joined Date</th>
                         <th class="py-3.5 px-4 text-center">Actions</th>
                     </tr>
@@ -97,6 +98,31 @@
                                     </span>
                                 @endif
                             </td>
+                            <td class="py-3.5 px-4 text-center">
+                                @php
+                                    $currentStatus = $user->status ?? ($user->email_verified_at ? 'Verified' : 'Pending');
+                                @endphp
+                                <form action="{{ route('users.update-status', $user) }}" method="POST" class="inline-block">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div class="relative inline-block">
+                                        <select name="status" 
+                                                onchange="this.form.submit()" 
+                                                class="text-[11px] font-bold rounded-full py-1 ps-3 pe-7 border cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-offset-1
+                                                @if($currentStatus === 'Verified')
+                                                    bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-400
+                                                @elseif($currentStatus === 'Cancel')
+                                                    bg-rose-50 text-rose-700 border-rose-200 focus:ring-rose-400
+                                                @else
+                                                    bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-400
+                                                @endif">
+                                            <option value="Pending" {{ $currentStatus === 'Pending' ? 'selected' : '' }}>⏳ Pending</option>
+                                            <option value="Verified" {{ $currentStatus === 'Verified' ? 'selected' : '' }}>✓ Verified</option>
+                                            <option value="Cancel" {{ $currentStatus === 'Cancel' ? 'selected' : '' }}>✕ Cancel</option>
+                                        </select>
+                                    </div>
+                                </form>
+                            </td>
                             <td class="py-3.5 px-4 text-center text-slate-500">
                                 {{ $user->created_at->format('M d, Y') }}
                             </td>
@@ -119,7 +145,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-10 text-slate-400">No members found.</td>
+                            <td colspan="7" class="text-center py-10 text-slate-400">No members found.</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -10,7 +10,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::paginate(10);
+        $users = User::latest()->paginate(5)->withQueryString();
         return view('admin.users.index', compact('users'));
     }
 
@@ -26,9 +26,17 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|in:admin,user',
+            'status' => 'nullable|in:Pending,Verified,Cancel',
         ]);
 
         $validated['password'] = bcrypt($validated['password']);
+        if (empty($validated['status'])) {
+            $validated['status'] = 'Pending';
+        }
+        if ($validated['status'] === 'Verified') {
+            $validated['email_verified_at'] = now();
+        }
+
         User::create($validated);
         
         return redirect()->route('users.index')->with('success', 'User created successfully.');
@@ -50,6 +58,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'role' => 'required|in:admin,user',
+            'status' => 'nullable|in:Pending,Verified,Cancel',
         ]);
 
         if ($request->filled('password')) {
@@ -57,8 +66,36 @@ class UserController extends Controller
             $validated['password'] = bcrypt($request->password);
         }
 
+        if (isset($validated['status'])) {
+            if ($validated['status'] === 'Verified' && !$user->email_verified_at) {
+                $user->email_verified_at = now();
+            } elseif ($validated['status'] !== 'Verified') {
+                $user->email_verified_at = null;
+            }
+        }
+
         $user->update($validated);
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
+    }
+
+    public function updateStatus(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:Pending,Verified,Cancel',
+        ]);
+
+        $status = $validated['status'];
+        $user->status = $status;
+
+        if ($status === 'Verified') {
+            $user->email_verified_at = now();
+        } else {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return redirect()->route('users.index')->with('success', "Status for {$user->name} updated to {$status} successfully.");
     }
 
     public function destroy(User $user)

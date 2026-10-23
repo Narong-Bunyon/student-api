@@ -26,7 +26,7 @@
                     @error('email') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Role *</label>
                         <select name="role" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition bg-white">
@@ -34,6 +34,15 @@
                             <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrator</option>
                         </select>
                         @error('role') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Account Status *</label>
+                        <select name="status" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition bg-white">
+                            <option value="Pending" {{ old('status', 'Pending') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="Verified" {{ old('status') === 'Verified' ? 'selected' : '' }}>Verified</option>
+                            <option value="Cancel" {{ old('status') === 'Cancel' ? 'selected' : '' }}>Cancel</option>
+                        </select>
+                        @error('status') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Initial Password *</label>

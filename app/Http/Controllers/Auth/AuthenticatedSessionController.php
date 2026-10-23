@@ -30,12 +30,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // If the user is an admin, send them to the dashboard (HOME constant)
+        // If the user is an admin, send them directly to the admin dashboard without using the intended URL (avoids double redirects)
         if ($request->user()->role === 'admin') {
-            return redirect()->intended(RouteServiceProvider::HOME);
+            return redirect()->route('dashboard');
         }
 
-        // For regular users, ignore any previously‑intended URL and always go to the public home page
+        // For regular users, clear any intended admin URL and always go to the public home catalog page
         return redirect()->route('home');
     }
 

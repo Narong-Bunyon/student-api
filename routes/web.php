@@ -91,6 +91,29 @@ Route::get('/authors/{author}', function ($author) {
 })->name('client.authors.show');
 
 // Client-facing My Borrowings (for logged-in student)
+Route::middleware('auth')->group(function () {
+    Route::get('/my-borrowings', function () {
+        $userId = auth()->id();
+        $filter = request('filter'); // 'active' or 'returned'
+        $query = \App\Models\Borrowing::with(['book.category'])
+            ->where('user_id', $userId);
+        if ($filter === 'active') {
+            $query->whereNull('returned_at');
+        } elseif ($filter === 'returned') {
+            $query->whereNotNull('returned_at');
+        }
+        $borrowings = $query->latest()->paginate(8)->withQueryString();
+        $totalLoans = \App\Models\Borrowing::where('user_id', $userId)->count();
+        $activeLoans = \App\Models\Borrowing::where('user_id', $userId)->whereNull('returned_at')->count();
+        $returnedLoans = \App\Models\Borrowing::where('user_id', $userId)->whereNotNull('returned_at')->count();
+        return view('client.my-borrowings', compact('borrowings', 'totalLoans', 'activeLoans', 'returnedLoans'));
+    })->name('client.my-borrowings');
+
+    // Student borrowing request - show form
+    Route::get('/borrow-request', [\App\Http\Controllers\Web\BorrowingController::class, 'createRequest'])->name('client.borrow-request.create');
+    // Store request
+    Route::post('/borrow-request', [\App\Http\Controllers\Web\BorrowingController::class, 'storeRequest'])->name('client.borrow-request.store');
+});
 Route::middleware('auth')->get('/my-borrowings', function () {
     $userId = auth()->id();
     $filter = request('filter'); // 'active' or 'returned'
@@ -118,7 +141,7 @@ Route::get('/about', function () {
     return view('client.about');
 })->name('client.about');
 
-Route::middleware(['auth', 'verified', 'can:admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', function () {
         $totalBooks = \App\Models\Book::count();
         $activeMembers = \App\Models\User::where('role', '!=', 'admin')->count();
@@ -158,10 +181,11 @@ Route::middleware(['auth', 'verified', 'can:admin'])->group(function () {
     Route::resource('books', BookController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('borrowings', BorrowingController::class);
+    Route::patch('users/{user}/status', [UserController::class, 'updateStatus'])->name('users.update-status')->middleware('can:admin');
     Route::resource('users', UserController::class)->middleware('can:admin');
 
     // Admin Reports & Analytics
-    Route::get('/admin/reports', function () {
+    Route::get('/reports', function () {
         $totalBooks = \App\Models\Book::count();
         $totalCategories = \App\Models\Category::count();
         $totalBorrowings = \App\Models\Borrowing::count();
@@ -199,7 +223,7 @@ Route::middleware(['auth', 'verified', 'can:admin'])->group(function () {
     })->name('admin.reports');
 
     // Admin Profile
-    Route::get('/admin/profile', function () {
+    Route::get('/profile', function () {
         $user = auth()->user();
         $totalBooks = \App\Models\Book::count();
         $totalMembers = \App\Models\User::where('role', '!=', 'admin')->count();
@@ -209,11 +233,11 @@ Route::middleware(['auth', 'verified', 'can:admin'])->group(function () {
     })->name('admin.profile');
 
     // Admin Settings
-    Route::get('/admin/settings', function () {
+    Route::get('/settings', function () {
         return view('admin.settings.index');
     })->name('admin.settings');
 
-    Route::post('/admin/settings/system', function (\Illuminate\Http\Request $request) {
+    Route::post('/settings/system', function (\Illuminate\Http\Request $request) {
         $validated = $request->validate([
             'system_name' => 'required|string|max:100',
             'system_tagline' => 'nullable|string|max:150',
@@ -233,6 +257,11 @@ Route::middleware(['auth', 'verified', 'can:admin'])->group(function () {
         return redirect()->route('admin.settings')->with('success', 'System logo and branding updated successfully! Changes are applied across both the website and admin dashboard.');
     })->name('admin.settings.system.update');
 });
+
+// Legacy /dashboard redirect for backward compatibility
+Route::get('/dashboard', function () {
+    return redirect()->route('dashboard');
+})->middleware('auth');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

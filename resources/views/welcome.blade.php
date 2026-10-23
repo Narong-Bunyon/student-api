@@ -27,7 +27,9 @@
                     @if (Route::has('login'))
                         <div class="space-x-4">
                             @auth
-                                <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 bg-white/10 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-xl hover:bg-white/20 dark:hover:bg-gray-700/50 transition font-semibold">Dashboard</a>
+                                <a href="{{ auth()->user()->role === 'admin' ? route('dashboard') : route('home') }}" class="px-5 py-2.5 bg-white/10 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-xl hover:bg-white/20 dark:hover:bg-gray-700/50 transition font-semibold">
+                                    {{ auth()->user()->role === 'admin' ? 'Dashboard' : 'Catalog Home' }}
+                                </a>
                             @else
                                 <a href="{{ route('login') }}" class="px-5 py-2.5 bg-white/10 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-xl hover:bg-white/20 dark:hover:bg-gray-700/50 transition font-semibold">Log in</a>
 
@@ -54,8 +56,8 @@
 
                     <div class="flex justify-center gap-6">
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-2xl shadow-xl shadow-blue-500/30 transition transform hover:-translate-y-1 font-bold text-lg">
-                                Enter Dashboard &rarr;
+                            <a href="{{ auth()->user()->role === 'admin' ? route('dashboard') : route('home') }}" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-2xl shadow-xl shadow-blue-500/30 transition transform hover:-translate-y-1 font-bold text-lg">
+                                {{ auth()->user()->role === 'admin' ? 'Enter Dashboard →' : 'Browse Catalog →' }}
                             </a>
                         @else
                             <a href="{{ route('login') }}" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-2xl shadow-xl shadow-blue-500/30 transition transform hover:-translate-y-1 font-bold text-lg">

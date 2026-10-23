@@ -56,6 +56,7 @@
                         <th class="py-3.5 px-4">Book Title</th>
                         <th class="py-3.5 px-4">Member / User</th>
                         <th class="py-3.5 px-4 text-center">Borrowed Date</th>
+                        <th class="py-3.5 px-4 text-center">Due Date</th>
                         <th class="py-3.5 px-4 text-center">Return Status</th>
                         <th class="py-3.5 px-4 text-center">Actions</th>
                     </tr>
@@ -95,11 +96,26 @@
                             <td class="py-3.5 px-4 text-center text-slate-600">
                                 {{ $borrowing->borrowed_at ? \Carbon\Carbon::parse($borrowing->borrowed_at)->format('M d, Y') : ($borrowing->created_at ? $borrowing->created_at->format('M d, Y') : '-') }}
                             </td>
+                            <td class="py-3.5 px-4 text-center text-slate-600">
+                                @if($borrowing->due_at)
+                                    {{ \Carbon\Carbon::parse($borrowing->due_at)->format('M d, Y') }}
+                                @else
+                                    <span class="text-slate-400">—</span>
+                                @endif
+                            </td>
                             <td class="py-3.5 px-4 text-center">
+                                @php
+                                    $isOverdue = !$borrowing->returned_at && $borrowing->due_at && \Carbon\Carbon::parse($borrowing->due_at)->isPast();
+                                @endphp
                                 @if($borrowing->returned_at)
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                         <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                         Returned ({{ \Carbon\Carbon::parse($borrowing->returned_at)->format('M d') }})
+                                    </span>
+                                @elseif($isOverdue)
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 border border-red-300 shadow-sm animate-pulse" title="Late return past due date">
+                                        <span>🚩</span>
+                                        <span>Overdue Late</span>
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">

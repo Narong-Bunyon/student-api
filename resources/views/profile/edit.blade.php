@@ -67,14 +67,25 @@
 
                     <div class="space-y-4 text-xs">
                         <div class="flex justify-between items-center pb-3 border-b border-slate-100">
-                            <span class="text-slate-400">Email Status</span>
-                            @if($user->email_verified_at)
+                            <span class="text-slate-400">Account Status</span>
+                            @php
+                                $status = $user->status ?? ($user->email_verified_at ? 'Verified' : 'Pending');
+                            @endphp
+                            @if($status === 'Verified')
                                 <span class="inline-flex items-center gap-1 font-semibold text-emerald-600">
                                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                                     Verified
                                 </span>
+                            @elseif($status === 'Cancel')
+                                <span class="inline-flex items-center gap-1 font-semibold text-rose-600">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    Cancelled
+                                </span>
                             @else
-                                <span class="font-semibold text-amber-600">Unverified</span>
+                                <span class="inline-flex items-center gap-1 font-semibold text-amber-600">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Pending Approval
+                                </span>
                             @endif
                         </div>
                         <div class="flex justify-between items-center">
@@ -129,20 +140,36 @@
                     @include('profile.partials.update-password-form')
                 </div>
 
-                <!-- 3. Danger Zone / Delete Card -->
-                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-rose-200/80">
-                    <div class="flex items-center gap-3 pb-6 border-b border-rose-100 mb-6">
-                        <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <!-- 3. Danger Zone / Delete Card (Admin only; informative notice for students) -->
+                @if(auth()->user()->role === 'admin')
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-rose-200/80">
+                        <div class="flex items-center gap-3 pb-6 border-b border-rose-100 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-rose-900">Danger Zone</h3>
+                                <p class="text-xs text-rose-600/80 mt-0.5">Permanently remove your account and active session records.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-rose-900">Danger Zone</h3>
-                            <p class="text-xs text-rose-600/80 mt-0.5">Permanently remove your account and active session records.</p>
+
+                        @include('profile.partials.delete-user-form')
+                    </div>
+                @else
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/90">
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0 border border-amber-500/20">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Account Deletion Policy</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Student and member accounts cannot be self-deleted to maintain accurate book borrowing, return, and loan compliance records. If you need your account closed or transferred, please contact the campus library administrator.
+                                </p>
+                            </div>
                         </div>
                     </div>
-
-                    @include('profile.partials.delete-user-form')
-                </div>
+                @endif
             </div>
         </div>
     </div>
